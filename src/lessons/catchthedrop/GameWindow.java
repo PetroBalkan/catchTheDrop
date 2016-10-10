@@ -3,6 +3,8 @@ package lessons.catchthedrop;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 
 public class GameWindow extends JFrame {
@@ -13,6 +15,7 @@ public class GameWindow extends JFrame {
     private static float dropLeft = 200;
     private static float dropTop = -100;
     private static float dropSpeed = 200;
+    private static int score = 0;
 
     public static void main(String[] args) throws IOException {
         background = ImageIO.read(GameWindow.class.getResourceAsStream("img/background.png"));
@@ -25,10 +28,26 @@ public class GameWindow extends JFrame {
         gameWindow.setResizable(false);
         lastFrameTime = System.nanoTime();
         GameField gameField = new GameField();
+        gameField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                float dropRight = dropLeft+drop.getWidth(null);
+                float dropBotton = dropTop+drop.getHeight(null);
+                boolean isDrop = x>=dropLeft && x<=dropRight && y>=dropTop && y<=dropBotton;
+                if (isDrop){
+                    dropTop = -100;
+                    dropLeft =(int) (Math.random()*(gameField.getWidth()-drop.getWidth(null)));
+                    dropSpeed+=20;
+                    score++;
+                    gameWindow.setTitle("Score: "+score);
+                }
+            }
+        });
         gameWindow.add(gameField);
         gameWindow.setVisible(true);
     }
-
 
     private static void onRepaint (Graphics g ){
         long currentTime = System.nanoTime();
@@ -40,14 +59,15 @@ public class GameWindow extends JFrame {
         g.drawImage(background, 0,0,null);
 
         g.drawImage(drop, (int)dropLeft,(int)dropTop,null);
-       // g.drawImage(gameOver, 280,120,null);
+       if (dropTop>gameWindow.getHeight()) {
+           g.drawImage(gameOver, 280, 120, null);
+       }
     }
     private static class GameField extends JPanel{
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            dropTop++;
-            dropLeft+=4;
+
             onRepaint(g);
             repaint();
         }
